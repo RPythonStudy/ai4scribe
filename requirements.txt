@@ -13,3 +13,9 @@ pytz==2025.2
 PyYAML==6.0.2
 six==1.17.0
 tzdata==2025.2
+# App Dependencies (Migrated from ai4scribe_old)
+fastapi
+uvicorn
+jinja2
+google-generativeai
+faster-whisper

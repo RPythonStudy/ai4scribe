@@ -55,3 +55,4 @@ update:
 	python scripts/setup/update.py	
 
 # include Makefile_project
+include Makefile_project

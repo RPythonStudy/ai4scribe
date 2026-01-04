@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "AI4Scribe Helper",
+    "version": "1.0",
+    "description": "구글 캘린더에서 Ctrl+Click으로 회의 일정을 AI4Scribe로 바로 보냅니다.",
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://calendar.google.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "action": {
+        "default_title": "AI4Scribe Helper"
+    }
+}

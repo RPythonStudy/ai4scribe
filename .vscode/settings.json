@@ -16,5 +16,6 @@
   // 편의 설정: R 확장에서 Session 시작 시 .Renviron 로드 보장
   "r.source.encoding": "UTF-8",
   "r.rpath.linux": "/usr/local/bin/R",
-  "r.lsp.promptToInstall": false
+  "r.lsp.promptToInstall": false,
+  "makefile.configureOnOpen": true
 }

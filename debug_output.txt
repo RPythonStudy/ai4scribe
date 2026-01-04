@@ -1,0 +1,120 @@
+Fetching calendar events...
+Found 7 calendars.
+
+Scanning Calendar: 현서 (aafa1ee54dea85c077ba89b2648eeb6c49935d3de6aa63fd5aeaaf2c84470a05@group.calendar.google.com)
+  - No upcoming events.
+
+Scanning Calendar: 준서 (be16bab9b11039084271479620aacf3967d5f9cf6686f6d7e2fb52e5645bd004@group.calendar.google.com)
+  [Event] 준서수학학원
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'be16bab9b11039084271479620aacf3967d5f9cf6686f6d7e2fb52e5645bd004@group.calendar.google.com', 'displayName': '준서', 'self': True}
+  [Event] 준서수학학원
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'be16bab9b11039084271479620aacf3967d5f9cf6686f6d7e2fb52e5645bd004@group.calendar.google.com', 'displayName': '준서', 'self': True}
+  [Event] 준서영어
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'be16bab9b11039084271479620aacf3967d5f9cf6686f6d7e2fb52e5645bd004@group.calendar.google.com', 'displayName': '준서', 'self': True}
+  [Event] 준서영어
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'be16bab9b11039084271479620aacf3967d5f9cf6686f6d7e2fb52e5645bd004@group.calendar.google.com', 'displayName': '준서', 'self': True}
+  [Event] 준서수학학원
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'be16bab9b11039084271479620aacf3967d5f9cf6686f6d7e2fb52e5645bd004@group.calendar.google.com', 'displayName': '준서', 'self': True}
+
+Scanning Calendar: https://calendar-ics.kakao.com/CBdRGWlPp84lq3gm0Xir-oVmpbAfV0ym0IxzBxdubcg/talk.ics (gk40qg9l3pr8jogd79g0vksv6453thbf@import.calendar.google.com)
+  [Event] 도기윤
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'gk40qg9l3pr8jogd79g0vksv6453thbf@import.calendar.google.com', 'displayName': 'https://calendar-ics.kakao.com/CBdRGWlPp84lq3gm0Xir-oVmpbAfV0ym0IxzBxdubcg/talk.ics', 'self': True}
+  [Event] 1차
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'gk40qg9l3pr8jogd79g0vksv6453thbf@import.calendar.google.com', 'displayName': 'https://calendar-ics.kakao.com/CBdRGWlPp84lq3gm0Xir-oVmpbAfV0ym0IxzBxdubcg/talk.ics', 'self': True}
+  [Event] 테스트
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'gk40qg9l3pr8jogd79g0vksv6453thbf@import.calendar.google.com', 'displayName': 'https://calendar-ics.kakao.com/CBdRGWlPp84lq3gm0Xir-oVmpbAfV0ym0IxzBxdubcg/talk.ics', 'self': True}
+  [Event] 4차
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'gk40qg9l3pr8jogd79g0vksv6453thbf@import.calendar.google.com', 'displayName': 'https://calendar-ics.kakao.com/CBdRGWlPp84lq3gm0Xir-oVmpbAfV0ym0IxzBxdubcg/talk.ics', 'self': True}
+  [Event] 3차
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'gk40qg9l3pr8jogd79g0vksv6453thbf@import.calendar.google.com', 'displayName': 'https://calendar-ics.kakao.com/CBdRGWlPp84lq3gm0Xir-oVmpbAfV0ym0IxzBxdubcg/talk.ics', 'self': True}
+
+Scanning Calendar: 대한민국의 휴일 (ko.south_korea#holiday@group.v.calendar.google.com)
+  [Event] 새해첫날
+    - Description (First 100 chars): 공휴일...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ko.south_korea#holiday@group.v.calendar.google.com', 'displayName': '대한민국의 휴일', 'self': True}
+  [Event] 설날
+    - Description (First 100 chars): 공휴일...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ko.south_korea#holiday@group.v.calendar.google.com', 'displayName': '대한민국의 휴일', 'self': True}
+  [Event] 설날 연휴
+    - Description (First 100 chars): 공휴일...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ko.south_korea#holiday@group.v.calendar.google.com', 'displayName': '대한민국의 휴일', 'self': True}
+  [Event] 설날 연휴
+    - Description (First 100 chars): 공휴일...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ko.south_korea#holiday@group.v.calendar.google.com', 'displayName': '대한민국의 휴일', 'self': True}
+  [Event] 삼일절
+    - Description (First 100 chars): 공휴일...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ko.south_korea#holiday@group.v.calendar.google.com', 'displayName': '대한민국의 휴일', 'self': True}
+
+Scanning Calendar: 방어학회 (ee3d92b9cec1e9546735458911f9f3f6ac8b722f26e73a9c79dd919ec62ab219@group.calendar.google.com)
+  [Event] 방어학회 신년하례회
+    - Description (First 100 chars): 만복림 (서울역 10번 출구)...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ee3d92b9cec1e9546735458911f9f3f6ac8b722f26e73a9c79dd919ec62ab219@group.calendar.google.com', 'displayName': '방어학회', 'self': True}
+  [Event] 방어학회 이사회
+    - Description (First 100 chars): 위원회 구성 및 2026년 업무계획 보고
+Zoom...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ee3d92b9cec1e9546735458911f9f3f6ac8b722f26e73a9c79dd919ec62ab219@group.calendar.google.com', 'displayName': '방어학회', 'self': True}
+  [Event] 춘계 방어학회
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ee3d92b9cec1e9546735458911f9f3f6ac8b722f26e73a9c79dd919ec62ab219@group.calendar.google.com', 'displayName': '방어학회', 'self': True}
+  [Event] 하계 워크샵
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ee3d92b9cec1e9546735458911f9f3f6ac8b722f26e73a9c79dd919ec62ab219@group.calendar.google.com', 'displayName': '방어학회', 'self': True}
+  [Event] 방어 추계학술대회
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'ee3d92b9cec1e9546735458911f9f3f6ac8b722f26e73a9c79dd919ec62ab219@group.calendar.google.com', 'displayName': '방어학회', 'self': True}
+
+Scanning Calendar: kimbi.kirams@gmail.com (kimbi.kirams@gmail.com)
+  [Event] RI 치료 모임
+  - Error fetching events: 'cp949' codec can't encode character '\xa0' in position 43: illegal multibyte sequence
+
+Scanning Calendar: 대한핵의학회 (b78548050efd9ab3d15ec4365e5681328944398adc6bf00f413799cf81b0df09@group.calendar.google.com)
+  [Event] 신임이사회 Workshop
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'b78548050efd9ab3d15ec4365e5681328944398adc6bf00f413799cf81b0df09@group.calendar.google.com', 'displayName': '대한핵의학회', 'self': True}
+  [Event] 보험위원회OT 및 워크샵
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'b78548050efd9ab3d15ec4365e5681328944398adc6bf00f413799cf81b0df09@group.calendar.google.com', 'displayName': '대한핵의학회', 'self': True}
+  [Event] 신년교례회
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'b78548050efd9ab3d15ec4365e5681328944398adc6bf00f413799cf81b0df09@group.calendar.google.com', 'displayName': '대한핵의학회', 'self': True}
+  [Event] 의무위원회 워크샵
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'b78548050efd9ab3d15ec4365e5681328944398adc6bf00f413799cf81b0df09@group.calendar.google.com', 'displayName': '대한핵의학회', 'self': True}
+  [Event] 산업체 간담회
+    - Description (First 100 chars): No Description...
+    - Attendees Raw: []
+    - Organizer: {'email': 'b78548050efd9ab3d15ec4365e5681328944398adc6bf00f413799cf81b0df09@group.calendar.google.com', 'displayName': '대한핵의학회', 'self': True}

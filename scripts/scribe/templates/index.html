@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI4Scribe - Web Transcription</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 95%;
+            /* Use full width */
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
+
+        /* Responsive Grid Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            /* Fixed sidebar, flexible content */
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                /* Stack on small screens */
+            }
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 10px;
+            /* Sticky sidebar */
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #startBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #startBtn:hover {
+            background-color: #45a049;
+        }
+
+        #stopBtn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #stopBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        #summaryBtn {
+            background-color: #2196F3;
+            color: white;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        #summaryBtn:hover {
+            background-color: #1976D2;
+        }
+
+        .box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 150px;
+            /* max-height removed for full layout */
+            overflow-y: auto;
+            background-color: #fafafa;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        #transcription {
+            height: 50vh;
+            resize: vertical;
+        }
+
+        #summary {
+            height: 30vh;
+            resize: vertical;
+        }
+
+        .final {
+            color: #000;
+        }
+
+        .interim {
+            color: #888;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-layout">
+        <div class="sidebar">
+            <h2 style="margin-top:0; color:#333; text-align:center;">🎙️ AI4Scribe</h2>
+
+            <!-- Meeting Title Input -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: center; gap: 5px; align-items: center;">
+                    <input type="text" id="meetingTitle" placeholder="회의 주제를 입력하세요 (예: 1월 주간회의)"
+                        style="padding: 10px; width: 50%; font-size: 16px; border: 1px solid #ddd; border-radius: 6px;">
+                    <button onclick="fetchCalendarEvents()"
+                        style="padding: 10px; background-color: #eee; color: #333; border: 1px solid #ccc;">📅</button>
+                </div>
+                <div id="calendarSelectionArea" style="display: none; justify-content: center; margin-top: 5px;">
+                    <select id="calendarEventsSelect" onchange="selectCalendarEvent()"
+                        style="padding: 8px; width: 55%; border: 1px solid #2196F3; border-radius: 4px;">
+                        <option value="">회의를 선택하세요...</option>
+                    </select>
+                    <button onclick="closeCalendarSelection()"
+                        style="margin-left: 5px; padding: 5px 10px; background: none; border: none; font-size: 1.2em; cursor: pointer;">❌</button>
+                </div>
+            </div>
+
+            <!-- Input Source Selection -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <label style="margin-right: 15px;">
+                    <input type="radio" name="inputSource" value="mic" checked onchange="toggleInputSource()"> 🎤 마이크
+                    (기본)
+                </label>
+                <label style="margin-right: 15px;">
+                    <input type="radio" name="inputSource" value="system" onchange="toggleInputSource()"> 🖥️ 시스템 사운드
+                </label>
+                <label>
+                    <input type="radio" name="inputSource" value="file" onchange="toggleInputSource()"> 📁 파일 업로드
+                </label>
+            </div>
+
+            <div class="status" id="status">
+                준비됨 (마이크 권한 필요)
+                <span id="recordingTimer"
+                    style="margin-left: 10px; font-family: monospace; font-size: 1.2em; color: #555;">00:00</span>
+            </div>
+
+            <!-- Microphone Controls -->
+            <div class="controls" id="micControls">
+                <button id="startBtn" onclick="toggleRecognition()">녹음 시작</button>
+                <button id="resetBtn" onclick="resetApp()" style="background-color: #607D8B; color: white;">초기화</button>
+            </div>
+
+            <!-- System Audio Controls -->
+            <div class="controls" id="sysControls" style="display: none;">
+                <button id="sysStartBtn" onclick="startSystemRecording()"
+                    style="background-color: #9C27B0; color: white;">🖥️ 공유 및 녹음 시작</button>
+                <button id="sysStopBtn" onclick="stopSystemRecording()"
+                    style="background-color: #f44336; color: white; display: none;">녹음 중지 및 분석</button>
+            </div>
+
+            <!-- File Upload Controls -->
+            <div class="controls" id="fileControls" style="display: none; flex-direction: column; align-items: center;">
+                <input type="file" id="audioFileInput" accept="audio/*,video/*" style="margin-bottom: 10px;">
+                <button onclick="uploadAudioFile()" style="background-color: #FF9800; color: white;">📤 파일 분석
+                    시작</button>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 15px;">
+                <span id="autoSummaryStatus" style="font-size: 0.9em; color: #888;">⏱️ 자동 요약: 꺼짐</span>
+            </div>
+
+        </div> <!-- End Sidebar -->
+
+        <div class="main-content">
+            <div class="card">
+                <h3>📝 실시간 전사 / 분석 상태</h3>
+                <div id="transcription" class="box"></div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button id="summaryBtn" onclick="requestSummary()" style="flex: 1;">✨ AI 요약 생성 (텍스트 기반)</button>
+                    <button id="finalAnalysisBtn" onclick="performFinalAnalysis()"
+                        style="flex: 1; background-color: #9C27B0; color: white; display: none;">📥 최종 완료 및 전체 분석
+                        (오디오)</button>
+                </div>
+                <div id="usageStats" style="text-align: right; margin-top: 5px; color: #555;"></div>
+
+                <div style="margin-top: 20px; border-top: 2px dashed #ddd; padding-top: 15px;">
+                    <h3>👨‍💻 사람 서기 노트 (Human Scribe)</h3>
+
+                    <!-- Participants Input (Chips Style) -->
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-weight: bold; color: #555;">👥 참석자:</label>
+                        <div id="participantsContainer"
+                            style="border: 1px solid #ccc; border-radius: 4px; padding: 5px; display: flex; flex-wrap: wrap; gap: 5px; min-height: 42px; background: white; align-items: center; margin-top: 5px;">
+                            <!-- Chips will go here -->
+                            <input type="text" id="participantsInput" placeholder="이름 입력 후 엔터"
+                                style="border: none; outline: none; flex: 1; min-width: 150px; padding: 5px; font-size: 1em;"
+                                onkeydown="handleParticipantInput(event)">
+                        </div>
+                        <!-- Search Button outside -->
+                        <div style="text-align: right; margin-top: 2px;">
+                            <small style="color:#999; margin-right: 10px;">*이름 입력 후 Enter를 치면 추가됩니다.</small>
+                            <button onclick="saveCurrentPreset()"
+                                style="background-color: #607D8B; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px;">💾
+                                구성 저장</button>
+                            <button onclick="searchContacts()"
+                                style="background-color: #2196F3; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">🔍
+                                주소록 검색</button>
+                        </div>
+                        <!-- Suggestions Box (Absolute) -->
+                        <div style="position: relative;">
+                            <div id="contactSuggestions"
+                                style="position: absolute; top: 0; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; display: none; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.9em; color: #666;">회의 중 중요 사항이나 화자 정보를 입력하고 Enter를 치세요. AI가 이를 참고합니다.</p>
+
+                    <div id="userNoteLog" class="box"
+                        style="height: 100px; background-color: #fffde7; font-size: 0.9em; border: 1px solid #ffd600;">
+                        <div style="color: #aaa; font-style: italic;">(아직 메모가 없습니다)</div>
+                    </div>
+
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="userNoteInput" placeholder="예: '지금 말씀하시는 분은 김철수 이사님', '이 안건은 보류됨'..."
+                            style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"
+                            onkeypress="handleNoteInput(event)">
+                        <button onclick="addUserNote()" style="background-color: #FFC107; color: #333;">등록</button>
+                    </div>
+                </div>
+
+                <h3>🤖 AI 요약 결과</h3>
+                <div id="summary" class="box">요약 버튼을 누르면 여기에 결과가 표시됩니다...</div>
+
+                <div style="text-align: right; margin-top: 10px;">
+                    <button id="saveBtn" onclick="saveMinutes()"
+                        style="background-color: #009688; color: white; display: none;">💾 구글 드라이브/캘린더에 저장</button>
+                </div>
+            </div>
+        </div> <!-- End Card -->
+    </div> <!-- End Main Content -->
+    </div> <!-- End Main Layout -->
+
+    <script>
+        // --- 1. Auto Title Logic MOVED to end of file ---
+
+        // --- 2. Global Variables ---
+        let recognition;
+        let isRecognizing = false;
+        let finalTranscript = "";
+        let lastSummaryIndex = 0;
+        let selectedEventId = null; // Track selected event ID
+        let userNotes = []; // User timestamped notes
+
+
+        let currentEventsMap = {}; // Calendar events cache
+
+        // Timer Variables
+        let recordingStartTime = 0;
+        let recordingTimerInterval = null;
+
+        // Auto Summary Config
+        const autoSummarizeInterval = parseInt("{{ auto_summarize_interval }}") || 0;
+        let autoSummarizeTimer = null;
+
+        // System Audio / File Vars
+        let mediaRecorder; // For System Audio
+        let audioChunks = [];
+        let systemStream;
+
+        let micRecorder; // For Microphone Audio
+        let micChunks = [];
+        let micStream;
+
+        let audioChunkSeconds = parseInt("{{ audio_chunk_seconds }}") || 0;
+        let chunkTimer = null;
+        let isSystemRecording = false;
+
+        // Elements
+        const startBtn = document.getElementById('startBtn');
+        const statusDiv = document.getElementById('status');
+        const transcriptionDiv = document.getElementById('transcription');
+        const summaryDiv = document.getElementById('summary');
+        const autoSummaryStatus = document.getElementById('autoSummaryStatus');
+        const recordingTimerDisplay = document.getElementById('recordingTimer');
+
+        // --- 3. Calendar Functions ---
+        async function fetchCalendarEvents() {
+            const selectEl = document.getElementById('calendarEventsSelect');
+            const areaEl = document.getElementById('calendarSelectionArea');
+
+            selectEl.innerHTML = '<option value="">불러오는 중...</option>';
+            areaEl.style.display = 'flex';
+
+            try {
+                const response = await fetch('/calendar/events');
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('캘린더 오류: ' + data.error);
+                    areaEl.style.display = 'none';
+                    return;
+                }
+                if (!data.events || data.events.length === 0) {
+                    alert('예정된 회의가 없습니다.');
+                    areaEl.style.display = 'none';
+                    return;
+                }
+
+                selectEl.innerHTML = '<option value="">📋 회의를 선택하여 제목 자동 입력</option>';
+                currentEventsMap = {}; // Reset
+
+                data.events.forEach(evt => {
+                    let timeStr = '';
+                    if (evt.start) {
+                        const d = new Date(evt.start);
+                        const weekDay = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+                        const hours = String(d.getHours()).padStart(2, '0');
+                        const minutes = String(d.getMinutes()).padStart(2, '0');
+                        timeStr = `${d.getMonth() + 1}/${d.getDate()}(${weekDay}) ${hours}:${minutes}`;
+                    }
+                    const label = timeStr ? `[${timeStr}] ${evt.summary}` : evt.summary;
+
+                    const option = document.createElement('option');
+                    option.value = evt.id; // Store ID as value
+                    option.textContent = label;
+                    selectEl.appendChild(option);
+
+                    currentEventsMap[evt.id] = evt; // Cache event data
+                });
+
+            } catch (e) {
+                console.error(e);
+                alert("서버 연결 실패");
+                areaEl.style.display = 'none';
+            }
+        }
+
+        function selectCalendarEvent() {
+            const selectEl = document.getElementById('calendarEventsSelect');
+            const titleInput = document.getElementById('meetingTitle');
+            const selectedId = selectEl.value;
+
+            if (selectedId && currentEventsMap[selectedId]) {
+                const evt = currentEventsMap[selectedId];
+                selectedEventId = selectedId; // Set global ID for saving
+                titleInput.value = evt.summary;
+
+                // Set Participants
+                participantsList = []; // Reset first
+                renderParticipants();
+
+                if (evt.attendees && evt.attendees.length > 0) {
+                    evt.attendees.forEach(a => {
+                        const label = a.displayName ? `${a.displayName} <${a.email}>` : a.email;
+                        addParticipant(label);
+                    });
+                }
+                document.getElementById('calendarSelectionArea').style.display = 'none';
+            }
+        }
+
+        function closeCalendarSelection() {
+            document.getElementById('calendarSelectionArea').style.display = 'none';
+        }
+
+        // --- 4. Main App Logic ---
+        function toggleInputSource() {
+            const source = document.querySelector('input[name="inputSource"]:checked').value;
+            document.getElementById('micControls').style.display = source === 'mic' ? 'flex' : 'none';
+            document.getElementById('sysControls').style.display = source === 'system' ? 'flex' : 'none';
+            document.getElementById('fileControls').style.display = source === 'file' ? 'flex' : 'none';
+
+            let statusText = "준비됨";
+            if (source === 'mic') statusText += " (마이크 권한 필요)";
+            else if (source === 'system') statusText += " (시스템 사운드 공유 필요)";
+            else statusText += " (파일 선택 필요)";
+
+            if (statusDiv.childNodes[0]) statusDiv.childNodes[0].nodeValue = statusText + " ";
+        }
+
+        async function uploadAudioFile() {
+            const fileInput = document.getElementById('audioFileInput');
+            const file = fileInput.files[0];
+            const title = document.getElementById('meetingTitle').value.trim();
+
+            if (!file) { alert("파일을 선택해주세요."); return; }
+
+            statusDiv.childNodes[0].nodeValue = "📤 파일 업로드 및 분석 중... ";
+            statusDiv.style.color = "#FF9800";
+            summaryDiv.textContent = "⏳ 오디오 분석 중...";
+
+            const formData = new FormData();
+            formData.append("file", file);
+            if (title) formData.append("meeting_title", title);
+
+            try {
+                const response = await fetch('/analyze_audio', { method: 'POST', body: formData });
+                const data = await response.json();
+                handleAnalysisResult(data);
+                statusDiv.childNodes[0].nodeValue = "✅ 파일 분석 완료 ";
+                statusDiv.style.color = "#4CAF50";
+            } catch (e) {
+                alert("분석 실패: " + e);
+                statusDiv.childNodes[0].nodeValue = "❌ 오류 발생 ";
+                statusDiv.style.color = "red";
+            }
+        }
+
+        // ... (System Audio Recording - Simplified for brevity but functional) ...
+        async function startSystemRecording() {
+            try {
+                systemStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                if (systemStream.getAudioTracks().length === 0) {
+                    alert("오디오 공유가 감지되지 않았습니다.");
+                    systemStream.getTracks().forEach(t => t.stop());
+                    return;
+                }
+                mediaRecorder = new MediaRecorder(systemStream);
+                audioChunks = [];
+                isSystemRecording = true;
+
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    processAudioBlob(blob);
+                    audioChunks = [];
+                    if (isSystemRecording) mediaRecorder.start();
+                    else {
+                        systemStream.getTracks().forEach(t => t.stop());
+                        stopRecordingTimer();
+                        document.getElementById('sysStartBtn').style.display = 'inline-block';
+                        document.getElementById('sysStopBtn').style.display = 'none';
+                        statusDiv.childNodes[0].nodeValue = "⏹️ 녹음 종료 ";
+                        statusDiv.style.color = "#666";
+                        if (chunkTimer) clearInterval(chunkTimer);
+                    }
+                };
+                mediaRecorder.start();
+                // Chunk timer logic omitted for safety/brevity in restore
+
+                document.getElementById('sysStartBtn').style.display = 'none';
+                document.getElementById('sysStopBtn').style.display = 'inline-block';
+                statusDiv.childNodes[0].nodeValue = "🔴 시스템 녹음 중... ";
+                statusDiv.childNodes[0].nodeValue = "🖥️ 시스템 녹음 중... ";
+                statusDiv.style.color = "red";
+                transcriptionDiv.innerHTML = '<div style="color:#666; text-align:center; padding:20px;">🔊 시스템 오디오를 녹음하고 있습니다.<br>녹음이 종료되면 Gemini가 내용을 분석하여 결과를 표시합니다.<br>(실시간 텍스트 변환은 마이크 모드에서만 지원됩니다)</div>';
+                startRecordingTimer();
+
+                systemStream.getVideoTracks()[0].onended = stopSystemRecording;
+            } catch (e) { console.error(e); }
+        }
+
+        function stopSystemRecording() {
+            if (isSystemRecording) {
+                isSystemRecording = false;
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            }
+        }
+
+        async function processAudioBlob(blob) {
+            const title = document.getElementById('meetingTitle').value.trim();
+            statusDiv.childNodes[0].nodeValue = "📤 전송 및 분석 중... ";
+
+            const formData = new FormData();
+            formData.append("file", blob, "system.webm");
+            if (title) formData.append("meeting_title", title);
+            // Prepare Notes with Participants
+            let notesToSend = [...userNotes];
+            if (participantsList.length > 0) {
+                notesToSend.unshift(`참석자 명단: ${participantsList.join(', ')}`);
+            }
+            if (notesToSend.length > 0) formData.append("user_notes", JSON.stringify(notesToSend));
+
+            try {
+                const res = await fetch('/analyze_audio', { method: 'POST', body: formData });
+                const data = await res.json();
+                handleAnalysisResult(data);
+                statusDiv.childNodes[0].nodeValue = "✅ 분석 완료 ";
+            } catch (e) { console.error(e); }
+        }
+
+        // ... (Speech Recognition) ...
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = "{{ transcription_language }}";
+
+            recognition.onstart = function () {
+                isRecognizing = true;
+                statusDiv.childNodes[0].nodeValue = "🔴 녹음 중... ";
+                statusDiv.style.color = "red";
+                startBtn.textContent = "녹음 중지";
+                startBtn.style.backgroundColor = "#f44336";
+                startRecordingTimer();
+                startAutoSummarizer();
+                // --- Start Audio Capture ---
+                startMicRecording();
+            };
+            recognition.onend = function () {
+                isRecognizing = false;
+                statusDiv.childNodes[0].nodeValue = "⏹️ 대기 중 ";
+                statusDiv.style.color = "#666";
+                startBtn.textContent = "녹음 시작";
+                startBtn.style.backgroundColor = "#4CAF50";
+                stopRecordingTimer();
+                stopAutoSummarizer();
+                // --- Stop Audio Capture ---
+                stopMicRecording();
+            };
+            recognition.onresult = function (event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        const seg = event.results[i][0].transcript.trim();
+                        if (seg) finalTranscript += (finalTranscript ? '\n' : '') + '- ' + seg;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                transcriptionDiv.innerHTML = '<span class="final">' + finalTranscript.replace(/\n/g, '<br>') + '</span>' +
+                    '<span class="interim" style="color:#999;">' + (interimTranscript ? '<br>... ' + interimTranscript : '') + '</span>';
+                transcriptionDiv.scrollTop = transcriptionDiv.scrollHeight;
+            };
+        } else {
+            statusDiv.textContent = "⚠️ Web Speech API 미지원 브라우저";
+            startBtn.disabled = true;
+        }
+
+        function toggleRecognition() {
+            if (isRecognizing) recognition.stop(); else recognition.start();
+        }
+
+        function startRecordingTimer() {
+            recordingStartTime = Date.now();
+            recordingTimerInterval = setInterval(() => {
+                const elapsed = Date.now() - recordingStartTime;
+                const m = Math.floor(elapsed / 60000);
+                const s = Math.floor((elapsed % 60000) / 1000);
+                recordingTimerDisplay.textContent = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+            }, 1000);
+        }
+        function stopRecordingTimer() { clearInterval(recordingTimerInterval); }
+
+        function startAutoSummarizer() {
+            if (document.querySelector('input[name="inputSource"]:checked').value !== 'mic') return;
+            if (autoSummarizeInterval > 0) {
+                autoSummaryStatus.textContent = `✅ 자동 요약: ON (${autoSummarizeInterval}s)`;
+                autoSummaryStatus.style.color = "#4CAF50";
+                autoSummarizeTimer = setInterval(() => {
+                    const txt = finalTranscript.substring(lastSummaryIndex).trim();
+                    if (txt) {
+                        autoSummaryStatus.textContent = "🔄 처리 중...";
+                        requestSummary(true).then(() => {
+                            autoSummaryStatus.textContent = `✅ 자동 요약: ON (${autoSummarizeInterval}s)`;
+                        });
+                    }
+                }, autoSummarizeInterval * 1000);
+            }
+        }
+        function stopAutoSummarizer() { clearInterval(autoSummarizeTimer); autoSummaryStatus.textContent = "⏱️ 자동 요약: OFF"; }
+
+        async function resetApp() {
+            if (confirm("모든 내용을 초기화하시겠습니까? (서버 문맥 포함)")) {
+                await fetch('/reset', { method: 'POST' });
+                finalTranscript = ''; lastSummaryIndex = 0; transcriptionDiv.innerHTML = ''; summaryDiv.textContent = "초기화됨";
+                if (!isRecognizing) recordingTimerDisplay.textContent = "00:00";
+            }
+        }
+
+        async function requestSummary(isAuto = false) {
+            const newText = finalTranscript.substring(lastSummaryIndex).trim();
+            const title = document.getElementById('meetingTitle').value.trim();
+
+            if (!newText && !isAuto) { alert("새로운 내용이 없습니다."); return; }
+
+            const btn = document.getElementById('summaryBtn');
+            const originalText = btn.textContent;
+            if (!isAuto) { btn.disabled = true; btn.textContent = "⏳ 처리 중..."; summaryDiv.textContent = "생성 중..."; }
+
+            try {
+                // Prepare Notes with Participants
+                let notesToSend = [...userNotes];
+                if (participantsList.length > 0) {
+                    notesToSend.unshift(`참석자 명단: ${participantsList.join(', ')}`);
+                }
+
+                const res = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: newText,
+                        meeting_title: title,
+                        user_notes: notesToSend
+                    })
+                });
+                const data = await res.json();
+
+                if (data.summary) {
+                    summaryDiv.textContent = data.summary;
+                    lastSummaryIndex = finalTranscript.length;
+
+                    // Show Save Button!
+                    document.getElementById('saveBtn').style.display = 'inline-block';
+
+                    if (data.usage) {
+                        document.getElementById('usageStats').innerHTML = `<small>Cost: $${data.usage.estimated_cost_usd.toFixed(6)}</small>`;
+                    }
+                } else if (!isAuto) {
+                    summaryDiv.textContent = "요약 실패: " + data.error;
+                }
+            } catch (e) { if (!isAuto) summaryDiv.textContent = "오류: " + e; }
+            finally { btn.disabled = false; btn.textContent = originalText; }
+        }
+
+        function handleAnalysisResult(data) {
+            if (data.summary) {
+                summaryDiv.textContent = data.summary;
+                document.getElementById('saveBtn').style.display = 'inline-block';
+            } else {
+                summaryDiv.textContent = "오류: " + data.error;
+            }
+        }
+
+        async function saveMinutes() {
+            const summaryText = summaryDiv.textContent;
+            const title = document.getElementById('meetingTitle').value.trim() || "Untitled Meeting";
+
+            if (!summaryText || summaryText.includes("요약 버튼을 누르면")) {
+                alert("저장할 내용이 없습니다.");
+                return;
+            }
+
+            if (!confirm(`구글 드라이브에 저장하시겠습니까?\n제목: ${title}`)) return;
+
+            const btn = document.getElementById('saveBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "⏳ 저장 중...";
+
+            try {
+                const response = await fetch('/save_minutes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: summaryText,
+                        meeting_title: title,
+                        event_id: selectedEventId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    alert(data.message);
+                } else {
+                    alert("저장 오류: " + data.error);
+                }
+
+            } catch (e) {
+                alert("요청 실패: " + e);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // --- Mic Audio Helpers ---
+        async function startMicRecording() {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                micRecorder = new MediaRecorder(micStream);
+                micChunks = []; // Reset
+                micRecorder.ondataavailable = e => { if (e.data.size > 0) micChunks.push(e.data); };
+                micRecorder.onstop = () => {
+                    if (micStream) micStream.getTracks().forEach(t => t.stop());
+                    // Show final analysis button if we have data
+                    if (micChunks.length > 0) {
+                        document.getElementById('finalAnalysisBtn').style.display = 'inline-block';
+                    }
+                };
+                micRecorder.start();
+                document.getElementById('finalAnalysisBtn').style.display = 'none'; // Hide while recording
+            } catch (e) { console.error("Mic Error:", e); }
+        }
+
+        function stopMicRecording() {
+            if (micRecorder && micRecorder.state !== 'inactive') micRecorder.stop();
+        }
+
+        async function performFinalAnalysis() {
+            if (micChunks.length === 0) {
+                alert("녹음된 오디오 데이터가 없습니다.");
+                return;
+            }
+            if (!confirm("전체 오디오를 업로드하여 최종 분석을 수행하시겠습니까?\n(Gemini가 화자를 분석하고 전체 내용을 정리합니다)")) return;
+
+            const blob = new Blob(micChunks, { type: 'audio/webm' }); // Mic often records in webm
+            processAudioBlob(blob); // Reuse existing audio processing logic
+        }
+
+        // --- Human Scribe Helpers ---
+        function handleNoteInput(e) {
+            if (e.key === 'Enter') addUserNote();
+        }
+
+        function addUserNote() {
+            const input = document.getElementById('userNoteInput');
+            const noteText = input.value.trim();
+            if (!noteText) return;
+
+            // Timestamp (Recording time or Current Time)
+            let timeLabel = new Date().toLocaleTimeString();
+            if (recordingStartTime > 0) {
+                const elapsed = Date.now() - recordingStartTime;
+                const m = Math.floor(elapsed / 60000);
+                const s = Math.floor((elapsed % 60000) / 1000);
+                timeLabel = `[${m < 10 ? "0" + m : m}:${s < 10 ? "0" + s : s}]`;
+            }
+
+            const finalNote = `${timeLabel} ${noteText}`;
+            userNotes.push(finalNote); // Save to array
+
+            // UI Update
+            const logBox = document.getElementById('userNoteLog');
+            if (userNotes.length === 1 && logBox.children[0].textContent.includes("아직 메모가 없습니다")) logBox.innerHTML = '';
+
+            const p = document.createElement('div');
+            p.textContent = finalNote;
+            p.style.borderBottom = "1px solid #eee";
+            p.style.padding = "2px 0";
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight;
+
+            input.value = '';
+        }
+
+        // --- Contacts Search ---
+        async function searchContacts() {
+            const input = document.getElementById('participantsInput');
+            const suggestions = document.getElementById('contactSuggestions');
+            const val = input.value;
+            if (!val) return;
+
+            // Get last name segment (after comma)
+            const parts = val.split(',');
+            const query = parts[parts.length - 1].trim();
+            if (!query) { alert("검색할 이름을 입력하세요."); return; }
+
+            suggestions.innerHTML = '<div style="padding:10px; color:#666;">⏳ 구글 주소록 검색 중...</div>';
+            suggestions.style.display = 'block';
+
+            try {
+                const res = await fetch(`/contacts/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+
+                if (!data.results || data.results.length === 0) {
+                    suggestions.innerHTML = '<div style="padding:10px; color:#f44336;">결과 없음 (주소록 권한 확인 필요)</div>';
+                    setTimeout(() => suggestions.style.display = 'none', 3000);
+                    return;
+                }
+
+                suggestions.innerHTML = '';
+                data.results.forEach(contactStr => {
+                    const div = document.createElement('div');
+                    div.textContent = contactStr;
+                    div.style.padding = '8px 10px';
+                    div.style.cursor = 'pointer';
+                    div.style.borderBottom = '1px solid #eee';
+                    div.onmouseover = () => div.style.backgroundColor = '#e3f2fd';
+                    div.onmouseout = () => div.style.backgroundColor = 'white';
+                    div.onclick = () => {
+                        addParticipant(contactStr);
+                        input.value = ''; // Clear input
+                        suggestions.style.display = 'none';
+                        input.focus();
+                    };
+                    suggestions.appendChild(div);
+                });
+
+                // Close on click outside
+                const closeHandler = (e) => {
+                    if (!suggestions.contains(e.target) && e.target !== input) {
+                        suggestions.style.display = 'none';
+                        document.removeEventListener('click', closeHandler);
+                    }
+                };
+                setTimeout(() => document.addEventListener('click', closeHandler), 100);
+
+            } catch (e) {
+                console.error(e);
+                suggestions.innerHTML = '<div style="padding:10px; color:red;">에러 발생</div>';
+            }
+        }
+
+        // --- Participants / Chips Logic ---
+        let participantsList = [];
+        let attendeePresets = {};
+        let globalSearchResults = [];
+        let searchTimer = null;
+        let selectedSuggestionIndex = -1; // Track keyboard selection
+
+        try {
+            attendeePresets = JSON.parse(`{{ attendee_presets | safe }}`);
+        } catch (e) { console.error("Preset parse error", e); }
+
+        function renderParticipants() {
+            const container = document.getElementById('participantsContainer');
+            const input = document.getElementById('participantsInput');
+
+            const existingChips = container.querySelectorAll('.participant-chip');
+            existingChips.forEach(ch => ch.remove());
+
+            participantsList.forEach((p, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'participant-chip';
+                chip.style.cssText = "background: #e0e0e0; border-radius: 16px; padding: 4px 10px; font-size: 0.9em; display: flex; align-items: center; gap: 5px;";
+                chip.innerHTML = `<span>${p}</span><span style="cursor:pointer; font-weight:bold; color:#666;" onclick="removeParticipant(${idx})">×</span>`;
+                container.insertBefore(chip, input);
+            });
+        }
+
+        function addParticipant(nameStr) {
+            nameStr = nameStr.trim();
+            if (!nameStr) return;
+            if (!participantsList.includes(nameStr)) {
+                participantsList.push(nameStr);
+                renderParticipants();
+            }
+            // Cleanup UI
+            const input = document.getElementById('participantsInput');
+            input.value = '';
+            document.getElementById('contactSuggestions').style.display = 'none';
+            globalSearchResults = [];
+            selectedSuggestionIndex = -1;
+        }
+
+        function removeParticipant(idx) {
+            participantsList.splice(idx, 1);
+            renderParticipants();
+        }
+
+        function updateSuggestionHighlight() {
+            const suggestions = document.getElementById('contactSuggestions');
+            const items = suggestions.children;
+            for (let i = 0; i < items.length; i++) {
+                if (i === selectedSuggestionIndex) {
+                    items[i].style.backgroundColor = '#bbdefb'; // Hightlight color
+                    items[i].scrollIntoView({ block: 'nearest' });
+                } else {
+                    items[i].style.backgroundColor = 'white';
+                }
+            }
+        }
+
+        function handleParticipantInput(e) {
+            // Arrow Keys for Navigation
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (globalSearchResults.length === 0) return;
+                selectedSuggestionIndex++;
+                if (selectedSuggestionIndex >= globalSearchResults.length) selectedSuggestionIndex = 0;
+                updateSuggestionHighlight();
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (globalSearchResults.length === 0) return;
+                selectedSuggestionIndex--;
+                if (selectedSuggestionIndex < 0) selectedSuggestionIndex = globalSearchResults.length - 1;
+                updateSuggestionHighlight();
+                return;
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = e.target.value.trim();
+
+                // 1. Keyboard Selection Priority
+                if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < globalSearchResults.length) {
+                    addParticipant(globalSearchResults[selectedSuggestionIndex]);
+                    return;
+                }
+
+                if (!val) return;
+
+                // 2. Smart Enter Logic
+                if (globalSearchResults.length === 1) {
+                    addParticipant(globalSearchResults[0]);
+                } else if (globalSearchResults.length > 1) {
+                    alert("동명이인이 있습니다. 화살표 키로 선택하거나 목록에서 클릭해주세요.");
+                } else {
+                    addParticipant(val);
+                }
+            }
+        }
+
+
+
+        async function saveCurrentPreset() {
+            if (participantsList.length === 0) {
+                alert("저장할 참석자가 없습니다."); return;
+            }
+            const name = prompt("이 참석자 구성을 저장할 이름(키워드)을 입력하세요.\n예: '주간회의' 또는 'TF팀'");
+            if (!name) return;
+
+            try {
+                const res = await fetch('/presets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        participants: participantsList
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    attendeePresets = data.presets; // Update local cache
+                    alert(`✅ '${name}' 프리셋이 저장되었습니다.\n이제 제목에 '${name}'이 포함되면 자동으로 불러옵니다.`);
+                } else {
+                    alert("저장 실패: " + data.message);
+                }
+            } catch (e) {
+                alert("오류 발생: " + e);
+            }
+        }
+
+        // Debounced Auto-Search
+        document.getElementById('participantsInput').addEventListener('input', function (e) {
+            clearTimeout(searchTimer);
+            const val = e.target.value.trim();
+
+            if (val.length === 0) {
+                document.getElementById('contactSuggestions').style.display = 'none';
+                globalSearchResults = [];
+                selectedSuggestionIndex = -1;
+                return;
+            }
+
+            searchTimer = setTimeout(() => {
+                searchContacts(true); // Silent mode
+            }, 300);
+        });
+
+        // Hook into Title Input for Presets
+        document.getElementById('meetingTitle').addEventListener('input', function (e) {
+            const val = e.target.value;
+            for (const k in attendeePresets) {
+                if (val.includes(k)) {
+                    attendeePresets[k].forEach(p => addParticipant(p));
+                }
+            }
+        });
+
+        // --- Contacts Search (Modified) ---
+        async function searchContacts(isSilent = false) {
+            const input = document.getElementById('participantsInput');
+            const suggestions = document.getElementById('contactSuggestions');
+            const val = input.value.trim();
+
+            if (!val) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            if (!isSilent) suggestions.innerHTML = '<div style="padding:10px; color:#666;">⏳ 검색 중...</div>';
+            suggestions.style.display = 'block';
+
+            try {
+                const res = await fetch(`/contacts/search?q=${encodeURIComponent(val)}`);
+                const data = await res.json();
+
+                globalSearchResults = []; // Clear previous
+                selectedSuggestionIndex = -1; // Reset cursor
+
+                if (!data.results || data.results.length === 0) {
+                    // Only show 'No results' if we want to confirm to user
+                    if (!isSilent) suggestions.innerHTML = '<div style="padding:10px; color:#f44336;">결과 없음</div>';
+                    else suggestions.style.display = 'none';
+                    return;
+                }
+
+                globalSearchResults = data.results;
+
+                suggestions.innerHTML = '';
+                data.results.forEach((contactStr, idx) => {
+                    const div = document.createElement('div');
+                    div.textContent = contactStr;
+                    div.style.padding = '8px 10px';
+                    div.style.cursor = 'pointer';
+                    div.style.borderBottom = '1px solid #eee';
+                    // Hover effect (only if not using keyboard to avoid conflict visual?)
+                    // Let's keep mouseover updating visual but NOT index to keep it simple
+                    div.onmouseover = () => { div.style.backgroundColor = '#e3f2fd'; };
+                    div.onmouseout = () => {
+                        // Restore white only if NOT selected by keyboard
+                        if (idx !== selectedSuggestionIndex) div.style.backgroundColor = 'white';
+                    };
+                    div.onclick = () => {
+                        addParticipant(contactStr);
+                        input.focus();
+                    };
+                    suggestions.appendChild(div);
+                });
+
+                // Auto-select the first item by default for better UX
+                if (globalSearchResults.length > 0) {
+                    selectedSuggestionIndex = 0;
+                    updateSuggestionHighlight();
+                }
+
+            } catch (e) {
+                if (!isSilent) console.error(e);
+                globalSearchResults = [];
+            }
+        }
+    </script>
+    <script>
+        // --- Auto Title Logic (Robust Version) ---
+        (function () {
+            // Wait heavily for everything to be ready
+            setTimeout(function () {
+                try {
+                    console.log("🚀 Executing Auto Title Logic...");
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const autoTitle = urlParams.get('auto_title');
+
+                    if (autoTitle) {
+                        console.log("Found title:", autoTitle);
+                        const titleInput = document.getElementById('meetingTitle');
+                        if (titleInput) {
+                            titleInput.value = autoTitle;
+                            // Visual Feedback
+                            titleInput.style.backgroundColor = "#e8f5e9";
+                            titleInput.style.transition = "background-color 0.5s";
+                            setTimeout(() => titleInput.style.backgroundColor = "white", 1000);
+                            console.log("✅ Title set successfully!");
+                        } else {
+                            console.error("❌ 'meetingTitle' input not found!");
+                        }
+                    } else {
+                        console.log("ℹ️ No auto_title param found.");
+                    }
+                } catch (e) {
+                    console.error("Auto-title error:", e);
+                }
+            }, 500);
+        })();
+    </script>
+</body>
+
+</html>
